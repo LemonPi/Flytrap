@@ -10,10 +10,16 @@ public class Engine {
 	public static final double KD = 0.005;
 	public static final int FWD = 1;
 	public static final int BWD = -1;
-	public static final double MM_PER_DEGREE = -444444;
-	public static final double BASE_WIDTH = -444444;
+	public static final double MM_PER_DEGREE = 3470/20/360;
+	public static final double BASE_WIDTH = (90+145)/2;
+
+	public static final int TOP_SPEED = 600;	// degrees per second
 
 	public static final int ANY_HEADING = 9000;
+	public static final double TARGET_CLOSE_ENOUGH = 50;	// in mm
+	public static final double TARGET_CLOSE = 500;	// in mm
+	public static final double HEADING_TOLERANCE = 5;	// in angle
+	public static final double HEADING_THRESHOLD_TURN_IN_PLACE = 40;	// in angle
 
 	public static final int NUM_BEHAVIOUR = 5;
 	public static final int BOUNDARY_LAYER = 0;
@@ -43,6 +49,8 @@ public class Engine {
 	static double rx,ry,heading;	// heading is in degrees [-180,180]
 
 	static List<Target> targets = new ArrayList<Target>();
+
+	static int process_cycles;
 
 
 	public static <T extends Comparable<T>> T clamp(T val, T min, T max) {
@@ -124,18 +132,38 @@ public class Engine {
 
 		odometry();
 
-		// process behaviours
-		Navigate.navigate();
-		Turn.turn_in_place();
-		Boundary.avoid_boundary();
+		process_cycles = 1;
 
-		arbitrate();
+		while (process_cycles >= 0) {
+			// process behaviours
+			Navigate.locate_target();
+			Navigate.navigate();
+			Turn.turn_in_place();
+			Boundary.avoid_boundary();
+
+			arbitrate();
+			--process_cycles;
+		}
 
 
 		pid_control(instant_speed_l, instant_speed_r);
 		motor_l.setSpeed(out_l);
 		motor_r.setSpeed(out_r);
 		return true;
+	}
+
+	public static void waypoint(int behaviour) {
+		Flytrap.rcon.out.println("w " + behaviour);
+
+		if (targets.size() > 1) {
+			// more targets to reach, get to those
+			targets.remove(targets.size()-1);
+			behaviours[NAV_LAYER].active = true;
+		}
+		// finished turning
+		if (behaviours[TURN_LAYER].active == true) {
+			behaviours[TURN_LAYER].active = false;
+		}
 	}
 
 }
