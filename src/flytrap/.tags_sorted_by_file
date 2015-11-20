@@ -1,0 +1,50 @@
+Behaviour	Behaviour.java	/^public class Behaviour {$/;"	c
+flytrap	Behaviour.java	/^package flytrap;$/;"	p
+speed	Behaviour.java	/^	int speed, $/;"	f	class:Behaviour
+EmergencyStop	EmergencyStop.java	/^public class EmergencyStop implements Runnable {$/;"	c
+flytrap	EmergencyStop.java	/^package flytrap;$/;"	p
+run	EmergencyStop.java	/^	public void run() {$/;"	m	class:EmergencyStop
+start	EmergencyStop.java	/^	public static void start() {$/;"	m	class:EmergencyStop
+Engine	Engine.java	/^public class Engine {$/;"	c
+flytrap	Engine.java	/^package flytrap;$/;"	p
+Flytrap	Flytrap.java	/^public class Flytrap {$/;"	c
+flytrap	Flytrap.java	/^package flytrap;$/;"	p
+getTargets	Flytrap.java	/^	public static List<int[]> getTargets() {$/;"	m	class:Flytrap
+main	Flytrap.java	/^	public static void main(String[] args) {$/;"	m	class:Flytrap
+rcon	Flytrap.java	/^	public static RConsole rcon = new RConsole();$/;"	f	class:Flytrap
+sendPoint	Flytrap.java	/^	public static void sendPoint(int type, int x, int y) {$/;"	m	class:Flytrap
+sleep	Flytrap.java	/^	public static void sleep(long amount) {$/;"	m	class:Flytrap
+MODE_LCD	RConsole.java	/^    static final int MODE_LCD = 0x0;$/;"	f	class:RConsole
+MODE_SWITCH	RConsole.java	/^    static final int MODE_SWITCH = 0xff;$/;"	f	class:RConsole
+RCONSOLE_PORT	RConsole.java	/^    static final int RCONSOLE_PORT = 8001;    $/;"	f	class:RConsole
+RConsole	RConsole.java	/^	public RConsole()$/;"	m	class:RConsole
+RConsole	RConsole.java	/^public class RConsole extends Thread$/;"	c
+conn	RConsole.java	/^    Socket conn = null;$/;"	f	class:RConsole
+connected	RConsole.java	/^    public volatile boolean connected = false;$/;"	f	class:RConsole
+flytrap	RConsole.java	/^package flytrap;$/;"	p
+getLine	RConsole.java	/^	public String getLine() {$/;"	m	class:RConsole
+isConnected	RConsole.java	/^	public boolean isConnected() {$/;"	m	class:RConsole
+lcd	RConsole.java	/^    private TextLCD lcd = LocalEV3.get().getTextLCD();$/;"	f	class:RConsole	file:
+origErr	RConsole.java	/^    PrintStream origOut = System.out, origErr = System.err;$/;"	f	class:RConsole
+origOut	RConsole.java	/^    PrintStream origOut = System.out, origErr = System.err;$/;"	f	class:RConsole
+os	RConsole.java	/^    SynchronizedOutputStream os;$/;"	f	class:RConsole
+out	RConsole.java	/^    public PrintStream out = System.out;$/;"	f	class:RConsole
+receiveDeque	RConsole.java	/^    private Deque<String> receiveDeque = new ArrayDeque<String>();$/;"	f	class:RConsole	file:
+run	RConsole.java	/^    public void run()$/;"	m	class:RConsole
+waitLine	RConsole.java	/^	public String waitLine() {$/;"	m	class:RConsole
+SynchronizedOutputStream	SynchronizedOutputStream.java	/^	public SynchronizedOutputStream(OutputStream os) {$/;"	m	class:SynchronizedOutputStream
+SynchronizedOutputStream	SynchronizedOutputStream.java	/^public class SynchronizedOutputStream extends OutputStream {$/;"	c
+close	SynchronizedOutputStream.java	/^	public synchronized void close()  throws IOException {$/;"	m	class:SynchronizedOutputStream
+flush	SynchronizedOutputStream.java	/^	public synchronized void flush() throws IOException {$/;"	m	class:SynchronizedOutputStream
+flytrap	SynchronizedOutputStream.java	/^package flytrap;$/;"	p
+os	SynchronizedOutputStream.java	/^	private OutputStream os;$/;"	f	class:SynchronizedOutputStream	file:
+write	SynchronizedOutputStream.java	/^	public synchronized void write(byte[] b)  throws IOException {$/;"	m	class:SynchronizedOutputStream
+write	SynchronizedOutputStream.java	/^	public synchronized void write(byte[] b, int off, int len)  throws IOException {$/;"	m	class:SynchronizedOutputStream
+write	SynchronizedOutputStream.java	/^	public synchronized void write(int b) throws IOException {$/;"	m	class:SynchronizedOutputStream
+writeLCD	SynchronizedOutputStream.java	/^	public synchronized void writeLCD(byte[] b) throws IOException {$/;"	m	class:SynchronizedOutputStream
+!_TAG_FILE_SORTED	1	/0=unsorted, 1=sorted, 2=foldcase/
+!_TAG_FILE_FORMAT	2	/extended format; --format=1 will not append ;" to lines/
+!_TAG_PROGRAM_VERSION	5.8	//
+!_TAG_PROGRAM_AUTHOR	Darren Hiebert	/dhiebert@users.sourceforge.net/
+!_TAG_PROGRAM_NAME	Exuberant Ctags	//
+!_TAG_PROGRAM_URL	http://ctags.sourceforge.net	/official site/
