@@ -1,4 +1,5 @@
 package flytrap;
+import Engine.*;
 
 import java.util.*;
 
@@ -19,22 +20,24 @@ public class Flytrap {
 		rcon.out.println(type + " " + x + " " + y);
 	}
 	
+	// get information from remote 
 	public static void getPose() {
 		rx = (double)Integer.parseInt(rcon.waitLine());
 		ry = (double)Integer.parseInt(rcon.waitLine());
 		heading = (double)Integer.parseInt(rcon.waitLine());
-
 	}
-
 	public static void getTargets() {
 		while (true) {
-			int x = Integer.parseInt(rcon.waitLine());
-			int y = Integer.parseInt(rcon.waitLine());
-			int angle = Integer.parseInt(rcon.waitLine());
-			if (x == 0 && y == 0) break;
-			targets.add(new int[]{x, y, angle});
+			Target cur_target = new Target();
+			cur_target.type = Integer.parse(rcon.waitLine());
+			cur_target.x = Integer.parseInt(rcon.waitLine());
+			cur_target.y = Integer.parseInt(rcon.waitLine());
+			cur_target.theta = Integer.parseInt(rcon.waitLine());
+			if (cur_target.x == 0 && cur_target.y == 0) break;
+			targets.add(cur_target);
 		}
 	}
+
 
 	public static void main(String[] args) {
 		EmergencyStop.start();
