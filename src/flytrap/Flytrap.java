@@ -1,5 +1,5 @@
 package flytrap;
-import Engine.*;
+import static flytrap.Engine.*;
 
 import java.util.*;
 
@@ -29,10 +29,10 @@ public class Flytrap {
 	public static void getTargets() {
 		while (true) {
 			Target cur_target = new Target();
-			cur_target.type = Integer.parse(rcon.waitLine());
+			cur_target.type = Integer.parseInt(rcon.waitLine());
 			cur_target.x = Integer.parseInt(rcon.waitLine());
 			cur_target.y = Integer.parseInt(rcon.waitLine());
-			cur_target.theta = Integer.parseInt(rcon.waitLine());
+			cur_target.angle = Integer.parseInt(rcon.waitLine());
 			if (cur_target.x == 0 && cur_target.y == 0) break;
 			targets.add(cur_target);
 		}
