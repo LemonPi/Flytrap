@@ -67,6 +67,7 @@ public class RConsole extends Thread
         		BufferedReader input = new BufferedReader(new InputStreamReader(conn.getInputStream()));
         		//System.setOut(new PrintStream(os));
         		out = new PrintStream(os);
+        		out.println("Client Hello");
         		//System.setErr(new PrintStream(os));
         		System.out.println("Output redirected");
         		connected = true;

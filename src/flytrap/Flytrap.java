@@ -25,6 +25,7 @@ public class Flytrap {
 		rx = (double)Integer.parseInt(rcon.waitLine());
 		ry = (double)Integer.parseInt(rcon.waitLine());
 		heading = (double)Integer.parseInt(rcon.waitLine());
+		sendPoint(0, (int)rx, (int)ry);
 	}
 	public static void getTargets() {
 		while (true) {
@@ -36,6 +37,7 @@ public class Flytrap {
 			if (cur_target.x == 0 && cur_target.y == 0) break;
 			targets.add(cur_target);
 		}
+		behaviours[NAV_LAYER].active = true;
 	}
 
 
@@ -47,15 +49,18 @@ public class Flytrap {
 
 		getPose();
 		getTargets();
+		for (Target targ: targets) sendPoint(0, targ.x, targ.y);
 
-		// testing ECHO to rconsole
-		for (int i = 300; i < 400; i++) {
-			sendPoint(4, i, i);
-			sleep(100);
+		motor_l.resetTachoCount();
+		motor_r.resetTachoCount();
+		
+		while (true) {
+			long start = System.currentTimeMillis();
+			go();
+			sendPoint(active_behaviour, (int)rx, (int)ry);
+			long delta = System.currentTimeMillis() - start;
+			sleep(Math.max(0, 50 - delta));
 		}
-
-
-		go();
 	}
 
 }

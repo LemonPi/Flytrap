@@ -10,7 +10,7 @@ public class Engine {
 	public static final double KD = 0.005;
 	public static final int FWD = 1;
 	public static final int BWD = -1;
-	public static final double MM_PER_DEGREE = 3470/20/360;
+	public static final double MM_PER_DEGREE = 3470/20.0/360.0;
 	public static final double BASE_WIDTH = (90+145)/2;
 
 	public static final int TOP_SPEED = 600;	// degrees per second
@@ -44,6 +44,12 @@ public class Engine {
 	static int out_l, out_r;
 
 	static Behaviour[] behaviours = new Behaviour[NUM_BEHAVIOUR];
+	static {
+		for (int i = 0; i < behaviours.length; i++) {
+			behaviours[i] = new Behaviour();
+			behaviours[i].active = false;
+		}
+	}
 	static int active_behaviour = 0;
 
 	static double rx,ry,heading;	// heading is in degrees [-180,180]
@@ -149,6 +155,10 @@ public class Engine {
 		pid_control(instant_speed_l, instant_speed_r);
 		motor_l.setSpeed(out_l);
 		motor_r.setSpeed(out_r);
+		if (out_l != 0) motor_l.forward();
+		else motor_l.stop();
+		if (out_r != 0) motor_r.forward();
+		else motor_r.stop();
 		return true;
 	}
 
