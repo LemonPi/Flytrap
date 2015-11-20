@@ -1,0 +1,5 @@
+Eclipse IDE for Java Developers
+
+Version: Mars Release (4.5.0)
+Build id: 20150621-1200
+leJOS EV3 Development Tools, Version: 0.9.0.201501091746
