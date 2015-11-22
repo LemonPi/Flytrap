@@ -2,3 +2,5 @@
 *.pdf
 bin/
 *.jar
+*.tif
+*.png

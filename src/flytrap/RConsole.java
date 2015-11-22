@@ -61,7 +61,7 @@ public class RConsole extends Thread
     	while (true) {
             try {
             	System.out.println("Waiting for a connection");
-        		conn = new Socket("10.0.1.12", 3334);
+        		conn = new Socket("10.0.1.10", 3334);
         		conn.setSoTimeout(2000);
         		os = new SynchronizedOutputStream(conn.getOutputStream());
         		BufferedReader input = new BufferedReader(new InputStreamReader(conn.getInputStream()));

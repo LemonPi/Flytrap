@@ -5,18 +5,29 @@ import static java.lang.Math.*;
 
 public class Engine {
 	// constants 
-	public static final double KP = 1.194;
-	public static final double KI = 1.2;
-	public static final double KD = 0.005;
+	public static final int CYCLE_PERIOD = 50;	// ms
+	public static final int CYCLES_PER_SEC = 1000 / CYCLE_PERIOD;
+	
+	public static final double KP = 1;
+	public static final double KI = 0;
+	public static final double KD = 0;
+//	public static final double KP = 1.194;
+//	public static final double KI = 1.2;
+//	public static final double KD = 0.005;
 	public static final int FWD = 1;
 	public static final int BWD = -1;
-	public static final double MM_PER_DEGREE = 3470/20.0/360.0;
-	public static final double BASE_WIDTH = (90+145)/2;
+	public static final double MM_PER_DEGREE = 43*PI/360;
+	public static final double BASE_WIDTH = (103+142)/2;
+//	public static final double MM_PER_DEGREE = 3470/20.0/360.0;
+//	public static final double BASE_WIDTH = (90+145)/2;
 
-	public static final int TOP_SPEED = 600;	// degrees per second
+	
+	public static final int MIN_SPEED = 100 / CYCLES_PER_SEC;
+	public static final int TOP_SPEED = 300 / CYCLES_PER_SEC;	// degrees per second
 
 	public static final int ANY_HEADING = 9000;
-	public static final double TARGET_CLOSE_ENOUGH = 50;	// in mm
+	public static final double TARGET_CLOSE_ENOUGH = 40;	// in mm
+	public static final double TARGET_IMMEDIATE = 5;
 	public static final double TARGET_CLOSE = 500;	// in mm
 	public static final double HEADING_TOLERANCE = 5;	// in angle
 	public static final double HEADING_THRESHOLD_TURN_IN_PLACE = 40;	// in angle
@@ -27,7 +38,9 @@ public class Engine {
 	public static final int PUT_LAYER = 2;	// gets activated when near ball repostitory with ball
 	public static final int TURN_LAYER = 3;	// turning in place
 	public static final int NAV_LAYER = 4;	// otherwise on
+	
 	// internal state
+	static boolean on = false;
 	static NXTRegulatedMotor motor_l = Motor.A;
 	static NXTRegulatedMotor motor_r = Motor.B;
 
@@ -51,10 +64,12 @@ public class Engine {
 		}
 	}
 	static int active_behaviour = 0;
+	static int allowed_behaviours = 0;	// bit field with 0 being allowed and 1 being disabled
 
 	static double rx,ry,heading;	// heading is in degrees [-180,180]
 
 	static List<Target> targets = new ArrayList<Target>();
+	static Target target = null;
 
 	static int process_cycles;
 
@@ -70,37 +85,55 @@ public class Engine {
 	public static int clamp(int val, int min, int max) {
 		return val < min? min: val > max? max: val;
 	}
+	public static double wrap_angle(double angle) {
+		return angle < -180? angle + 360: angle > 180? angle - 360: angle;
+	}
+	public static int wrap_angle(int angle) {
+		return angle < -180? angle + 360: angle > 180? angle - 360: angle;
+	}
 	public static double rad(double deg) {
 		return Math.toRadians(deg);
 	}
+	
+	public static boolean allowed_behaviour(int b) {
+		return ((1 << b) & allowed_behaviours) == 0;
+	}
+	public static void allow_behaviour(int b) {
+		allowed_behaviours |= (1 << b);
+	}
+	public static void disable_behaviour(int b) {
+		allowed_behaviours &= ~(1 << b);
+	}
 
 	public static void pid_control(int sl, int sr) {
-		int err_l = target_l - sl;
-		int err_r = target_r - sr;
-
-		// derivative on measurement to fix derivative kick
-		int input_change_l = (sl - prev_l);
-		int input_change_r = (sr - prev_r);
-
-		// update state
-		prev_l = sl;
-		prev_r = sr;
-
-		// integral
-		integral_l += KI * err_l;
-		integral_r += KI * err_r;
-		clamp(integral_l, 0, 255);
-		clamp(integral_r, 0, 255);
-
-		out_l = (int) (KP*err_l + integral_l - KD*input_change_l);
-		out_r = (int) (KP*err_r + integral_r - KD*input_change_r);
-
+//		int err_l = target_l - sl;
+//		int err_r = target_r - sr;
+//
+//		// derivative on measurement to fix derivative kick
+//		int input_change_l = (sl - prev_l);
+//		int input_change_r = (sr - prev_r);
+//
+//		// update state
+//		prev_l = sl;
+//		prev_r = sr;
+//
+//		// integral
+//		integral_l += KI * err_l;
+//		integral_r += KI * err_r;
+//		clamp(integral_l, 0, 255);
+//		clamp(integral_r, 0, 255);
+//
+//		out_l = (int) (KP*err_l + integral_l - KD*input_change_l);
+//		out_r = (int) (KP*err_r + integral_r - KD*input_change_r);
+		out_l = target_l;
+		out_r = target_r;
 	}
 
 	public static void odometry() {
 		// get the displacement from motors (can read angular displacement directly)
 		instant_speed_l = motor_l.getTachoCount();
 		instant_speed_r = motor_r.getTachoCount();
+		
 		double displacement_l = instant_speed_l * MM_PER_DEGREE;
 		double displacement_r = instant_speed_r * MM_PER_DEGREE;
 		motor_l.resetTachoCount();
@@ -108,9 +141,7 @@ public class Engine {
 
 		double displacement = (displacement_l + displacement_r) * 0.5;
 
-		heading += Math.toDegrees(Math.atan2(displacement_l - displacement_r, BASE_WIDTH));
-		if (heading > 180) heading -= 360;
-		else if (heading < 180) heading += 360;
+		heading += wrap_angle(Math.toDegrees(Math.atan2(displacement_l - displacement_r, BASE_WIDTH)));
 		rx += displacement * cos(rad(heading));
 		ry += displacement * sin(rad(heading));
 	}
@@ -142,10 +173,10 @@ public class Engine {
 
 		while (process_cycles >= 0) {
 			// process behaviours
-			Navigate.locate_target();
-			Navigate.navigate();
-			Turn.turn_in_place();
-			Boundary.avoid_boundary();
+			if (target != null) Navigate.locate_target();
+			if (allowed_behaviour(NAV_LAYER)) Navigate.navigate();
+			if (allowed_behaviour(TURN_LAYER)) Turn.turn_in_place();
+			if (allowed_behaviour(BOUNDARY_LAYER)) Boundary.avoid_boundary();
 
 			arbitrate();
 			--process_cycles;
@@ -153,12 +184,20 @@ public class Engine {
 
 
 		pid_control(instant_speed_l, instant_speed_r);
-		motor_l.setSpeed(out_l);
-		motor_r.setSpeed(out_r);
-		if (out_l != 0) motor_l.forward();
+		
+//		Flytrap.rcon.out.println("- " + out_l + " " + out_r);
+		
+		motor_l.setSpeed(CYCLES_PER_SEC * abs(out_l));
+		motor_r.setSpeed(CYCLES_PER_SEC * abs(out_r));
+		
+		if (out_l > 0) motor_l.forward();
+		else if (out_l < 0) motor_l.backward();
 		else motor_l.stop();
-		if (out_r != 0) motor_r.forward();
+		
+		if (out_r > 0) motor_r.forward();
+		else if (out_r < 0) motor_r.backward();
 		else motor_r.stop();
+		
 		return true;
 	}
 
@@ -168,9 +207,19 @@ public class Engine {
 		if (targets.size() > 1) {
 			// more targets to reach, get to those
 			targets.remove(targets.size()-1);
+			target = targets.get(targets.size() - 1);
 			behaviours[NAV_LAYER].active = true;
 		}
-		// finished turning
+		// done, just exit
+		else {
+			behaviours[NAV_LAYER].active = false;
+			behaviours[TURN_LAYER].active = false;
+			Flytrap.rcon.out.println("done");
+			on = false;
+		}
+		
+		
+		// was a turn in place target, finished turning
 		if (behaviours[TURN_LAYER].active == true) {
 			behaviours[TURN_LAYER].active = false;
 		}

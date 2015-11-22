@@ -1,9 +1,10 @@
 import processing.net.*;
 import java.util.ArrayDeque;
-double PIXEL_PER_MM = 1;
-int offset_x = 200;
-int offset_y = 0;
+double PIXEL_PER_MM = 2;
+int offset_x = -200;
+int offset_y = 800;
 double BOUNDARY_SIZE_SCALE = 2*PIXEL_PER_MM;
+int GRID_WIDTH = 200;
 
 int x = 0;
 int y = 0;
@@ -25,8 +26,15 @@ void setup() {
   
   size(2000, 1600);
   draw_grid();
-  
+    
   strokeWeight(5);
+}
+
+void give_pose() {
+    brain.write("0\n");
+    brain.write("0\n");
+    brain.write("0\n");
+    println("gave pose");
 }
 
 void draw() {
@@ -52,6 +60,7 @@ void process_msg(String msg) {
       // boundary
     }
     default: {
+      if (msg.charAt(0) == '-') return;  // debug message
       String[] params = splitTokens(msg);
       if (params.length < 3) {
         println("bad format");
@@ -61,14 +70,17 @@ void process_msg(String msg) {
       y = int(params[2]);
       // active layer is params[0]
       switch (msg.charAt(0)) {
-        case '9':  stroke(255,105,180); strokeWeight(15); break;
+        case '9':  stroke(255,105,180); strokeWeight(15); break;  // for initial pose
         case '4':  stroke(0,0,250); break;
         case '3':  stroke(0,250,0); break;
         case '2':  stroke(0); break;
         case '1':  stroke(250,250,0); break;
         case '0':  stroke(250); break;
       }
-      point((int)(PIXEL_PER_MM*(y-offset_y)), (int)(height - PIXEL_PER_MM*(x-offset_x)));
+      point((int)(PIXEL_PER_MM*(y+offset_y)), (int)(height - PIXEL_PER_MM*(x-offset_x)));
+      //println((int)(PIXEL_PER_MM*(y+offset_y)), (int)(height - PIXEL_PER_MM*(x-offset_x)));
+
+      strokeWeight(7);  // default stroke weight
     }
   }
 }
@@ -88,7 +100,7 @@ void mouseReleased() {
     if (target_theta > 180) target_theta -= 360;
     else if (target_theta < -180) target_theta += 360;
     
-    targets.push(new int[]{target_x, target_y, target_theta});
+    targets.push(new int[]{target_x, target_y, target_theta,4});
     println(target_x,target_y,target_theta);    
     creating_target = false;
   }
@@ -109,16 +121,27 @@ void keyPressed() {
     savename += target_y;
     saveFrame(savename);
   }
+  else if (key == '1') {
+    println("sending prebuilt targets");
+    brain.write("4\n170\n-100\n0\n");
+    //brain.write("4\n500\n0\n0\n");
+    brain.write("4\n225\n-8\n0\n");
+    brain.write("0\n0\n0\n0\n");
+  }
   else if (key == '0') {
     println("sending " + targets.size() + " targets");
     while (!targets.isEmpty()) {
       int[] whatever = targets.pop();
+      brain.write(Integer.toString(whatever[3]) + "\n");
       brain.write(Integer.toString(whatever[0]) + "\n");
       brain.write(Integer.toString(whatever[1]) + "\n");
       brain.write(Integer.toString(whatever[2]) + "\n");
     }
     // terminate input sequence?
-    brain.write("0\n0\n0\n");
+    brain.write("0\n0\n0\n0\n");
+  }
+  else if (key == 'p') {
+    give_pose();
   }
 }
 
@@ -126,9 +149,9 @@ void keyPressed() {
   
 void draw_grid() {
   stroke(150);
-  for (int grid_x = 0; grid_x < height; grid_x += 200*PIXEL_PER_MM)
+  for (int grid_x = 0; grid_x < height; grid_x += GRID_WIDTH*PIXEL_PER_MM)
     line(0,grid_x, width,grid_x);
     
-  for (int grid_y = 0; grid_y < width; grid_y += 200*PIXEL_PER_MM)
+  for (int grid_y = 0; grid_y < width; grid_y += GRID_WIDTH*PIXEL_PER_MM)
     line(grid_y, 0, grid_y, height);
 }
