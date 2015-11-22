@@ -38,6 +38,9 @@ public class Engine {
 	public static final int PUT_LAYER = 2;	// gets activated when near ball repostitory with ball
 	public static final int TURN_LAYER = 3;	// turning in place
 	public static final int NAV_LAYER = 4;	// otherwise on
+	public static final int BOUNDARY_POS_LAYER = 9; // not a real layer; used by AvoidBoundary to send results
+	public static final int TARGET_GET = 3; // used to mark a target as a ball pickup or dropoff target
+
 	
 	// internal state
 	static boolean on = false;
@@ -93,6 +96,9 @@ public class Engine {
 	}
 	public static double rad(double deg) {
 		return Math.toRadians(deg);
+	}
+	public static double sq(double a) {
+		return a*a;
 	}
 	
 	public static boolean allowed_behaviour(int b) {
@@ -176,7 +182,7 @@ public class Engine {
 			if (target != null) Navigate.locate_target();
 			if (allowed_behaviour(NAV_LAYER)) Navigate.navigate();
 			if (allowed_behaviour(TURN_LAYER)) Turn.turn_in_place();
-			if (allowed_behaviour(BOUNDARY_LAYER)) Boundary.avoid_boundary();
+			if (allowed_behaviour(BOUNDARY_LAYER)) AvoidBoundary.avoid_boundary();
 
 			arbitrate();
 			--process_cycles;
