@@ -150,10 +150,10 @@ public class Flytrap {
 		// wait to be connected
 		while (!rcon.connected) sleep(100);
 
-//		gameplay();
+		gameplay();
 //		debug_PID();
 //		debug_turn_in_place();
-		debug_boundary_avoid();
+//		debug_boundary_avoid();
 	}
 	
 	// calibration without direct server report

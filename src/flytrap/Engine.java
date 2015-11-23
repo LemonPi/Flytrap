@@ -226,6 +226,7 @@ public class Engine {
 				if (allowed_behaviour(NAV_LAYER)) Navigate.navigate();
 				if (allowed_behaviour(TURN_LAYER)) Turn.turn_in_place();
 				if (allowed_behaviour(BOUNDARY_LAYER)) AvoidBoundary.avoid_boundary();
+				if (allowed_behaviour(GET_LAYER)) GetBall.get_ball();
 				
 				arbitrate();
 				--process_cycles;
