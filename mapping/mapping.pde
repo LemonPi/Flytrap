@@ -1,7 +1,7 @@
 import processing.net.*;
 import java.util.ArrayDeque;
-double PIXEL_PER_MM = 2;
-int offset_x = -200;
+double PIXEL_PER_MM = 1;
+int offset_x = -600;
 int offset_y = 800;
 double BOUNDARY_SIZE_SCALE = 2*PIXEL_PER_MM;
 int GRID_WIDTH = 200;
@@ -40,7 +40,7 @@ void give_pose() {
 void draw() {
   Client flytrap = brain.available();
   if (flytrap != null) {
-    String msg = flytrap.readString();
+    String msg = flytrap.readStringUntil('\n');
     if (msg != null) {
       print(msg);
       String trimmed_msg = msg.trim();
@@ -51,16 +51,50 @@ void draw() {
 }
 
 void process_msg(String msg) {
+  if (msg.charAt(0) == '-') return;  // debug message
   // put message onto a map with appropriate marker
   switch (msg.charAt(msg.length()-1)) {
     case 'X': {
       // target
+      String[] params = splitTokens(msg);
+      if (params.length < 4) {
+        println("bad format");
+        return;
+      }
+      println("received target");
+      x = int(params[1]);
+      y = int(params[2]);
+      int heading = int(params[3]);
+      stroke(255,105,180);
+      strokeWeight(10);
+      point((int)(PIXEL_PER_MM*(y+offset_y)), (int)(height - PIXEL_PER_MM*(x-offset_x)));
+      break;
     }
     case 'B': {
       // boundary
+      String[] params = splitTokens(msg);
+      if (params.length < 4) {
+        println("bad format");
+        return;
+      }
+      println("received boundary");
+      x = int(params[0]);
+      y = int(params[1]);
+      int r = int(params[2]);
+      int active = int(params[3]);
+      if (r < 0) {
+        println(msg);
+        throw new RuntimeException("WTF r is wrong: " + msg);
+      }
+ 
+      if (active == 0) stroke(133,60,110);
+      else stroke(0,255,55);
+      strokeWeight((int)(r * PIXEL_PER_MM) * 2);
+      point((int)(PIXEL_PER_MM*(y+offset_y)), (int)(height - PIXEL_PER_MM*(x-offset_x)));
+      break;
     }
     default: {
-      if (msg.charAt(0) == '-') return;  // debug message
+      strokeWeight(7);
       String[] params = splitTokens(msg);
       if (params.length < 3) {
         println("bad format");
@@ -79,8 +113,6 @@ void process_msg(String msg) {
       }
       point((int)(PIXEL_PER_MM*(y+offset_y)), (int)(height - PIXEL_PER_MM*(x-offset_x)));
       //println((int)(PIXEL_PER_MM*(y+offset_y)), (int)(height - PIXEL_PER_MM*(x-offset_x)));
-
-      strokeWeight(7);  // default stroke weight
     }
   }
 }
@@ -89,8 +121,8 @@ boolean creating_target = false;
 void mouseReleased() {
   stroke(255);
   strokeWeight(10);
-  int tx = (int)((height - (mouseY-offset_x))/PIXEL_PER_MM);
-  int ty = (int)((mouseX-offset_y)/PIXEL_PER_MM);
+  int tx = (int)((height - mouseY)/PIXEL_PER_MM + offset_x);
+  int ty = (int)((mouseX/PIXEL_PER_MM)-offset_y);
   // in the process of creating a target, second click sets the orientation
   if (creating_target) {
     double tt = Math.atan2(ty-target_y, tx-target_x);
@@ -119,13 +151,13 @@ void keyPressed() {
     savename += target_x;
     savename += '_';
     savename += target_y;
-    saveFrame(savename);
+    saveFrame(savename + ".png");
   }
   else if (key == '1') {
     println("sending prebuilt targets");
     brain.write("4\n170\n-100\n0\n");
     //brain.write("4\n500\n0\n0\n");
-    brain.write("4\n225\n-8\n0\n");
+    brain.write("4\n275\n-8\n0\n");
     brain.write("0\n0\n0\n0\n");
   }
   else if (key == '0') {
