@@ -13,9 +13,8 @@ public class Turn {
 		
 		if (!turn.active) return;
 		
-		to_turn = (int)(target.angle - heading);
+		to_turn = wrap_angle((int)(target.angle - heading));
 		// would be faster to turn in the other direction
-		to_turn = wrap_angle(to_turn);
 		
 		// turn until heading ~= targetted heading
 		if (abs(to_turn) < HEADING_TOLERANCE) {
@@ -26,6 +25,7 @@ public class Turn {
 		
 		// compare against initial turn size
 		turn.turn = to_turn / turn_size * TURN_SPEED;
+//		Flytrap.rcon.out.println("- turn" + to_turn + "/" + turn_size + "=>" + turn.turn);
 		if (abs(turn.turn) < MIN_SPEED) {
 			if (to_turn < 0) turn.turn = -MIN_SPEED;
 			else turn.turn = MIN_SPEED;
