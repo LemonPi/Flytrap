@@ -4,6 +4,7 @@ import java.util.*;
 
 import lejos.hardware.port.SensorPort;
 import lejos.hardware.sensor.*;
+import lejos.robotics.SampleProvider;
 
 import static java.lang.Math.*;
 
@@ -28,13 +29,13 @@ public class AvoidBoundary {
 	/* sensory */
 	private static double BOUNDARY_SENSOR_MIN = 50; // 5cm
 	private static double BOUNDARY_SENSOR_MAX = 500; // 50cm
-	private static int BOUNDARY_SENSOR_DEPTH = 30;  // offset of sensor that needs to be subtracted from center
+	private static int BOUNDARY_SENSOR_DEPTH = 0;//30;  // offset of sensor that needs to be subtracted from center
 	// radius of detected obstacle
 	private static double BOUNDARY_SENSOR_RADIUS = 40;
-	private static SensorMode distanceSensorMode;
+	private static SampleProvider distanceSensorMode;
 	private static float[] distanceSamples;
 	static {
-		distanceSensorMode = new EV3IRSensor(SensorPort.S3).getDistanceMode();
+		distanceSensorMode = new EV3UltrasonicSensor(SensorPort.S3).getDistanceMode();
 		distanceSamples = new float[distanceSensorMode.sampleSize()];
 	}
 

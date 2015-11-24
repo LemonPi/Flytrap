@@ -160,6 +160,22 @@ void keyPressed() {
     brain.write("4\n275\n-8\n0\n");
     brain.write("0\n0\n0\n0\n");
   }
+  else if (key == '2') {
+    println("sending real targets");
+    // CHANGE THESE AT GAMETIME!
+    int ball_x = 500;
+    int ball_y = 400;
+    int ball_pos = 0;
+    
+    int hole_x = 200;
+    int hole_y = -200;
+    int hole_pos = 3;
+    
+    brain.write("2\n"+hole_x+"\n"+hole_y+"\n"+hole_pos+"\n");
+    brain.write("1\n"+ball_x+"\n"+ball_y+"\n"+ball_pos+"\n");
+    brain.write("0\n0\n0\n0\n");
+  }
+    
   else if (key == '0') {
     println("sending " + targets.size() + " targets");
     while (!targets.isEmpty()) {

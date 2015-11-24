@@ -18,12 +18,12 @@ public class Engine {
 //	public static final double KP = 1.194;
 //	public static final double KI = 1.2;
 //	public static final double KD = 0.005;
-	public static final int FWD = 1;
-	public static final int BWD = -1;
-	public static final double MM_PER_DEGREE = 134.0/360;
-	public static final double BASE_WIDTH = 124.406;
-//	public static final double MM_PER_DEGREE = 3470/20.0/360.0;
-//	public static final double BASE_WIDTH = (90+145)/2;
+//	public static final int FWD = 1;
+//	public static final int BWD = -1;
+//	public static final double MM_PER_DEGREE = 134.0/360;
+//	public static final double BASE_WIDTH = 124.406;
+	public static final double MM_PER_DEGREE = 173.5/360.0; // 3470 / 20.0 / 360
+	public static final double BASE_WIDTH = 109.2263; // 109.2263
 
 	
 	public static final int MIN_SPEED = 120 / CYCLES_PER_SEC;

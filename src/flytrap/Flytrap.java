@@ -80,7 +80,7 @@ public class Flytrap {
 		motor_r.resetTachoCount();
 		
 //		disable_behaviour(TURN_LAYER);
-//		disable_behaviour(BOUNDARY_LAYER);
+		disable_behaviour(BOUNDARY_LAYER);
 //		for (int i = 0; i < 300; i += 60)
 //			AvoidBoundary.add_boundary((int)rx + 600, (int)ry + i, 40);
 		Runnable reporter = new ReportPose();
@@ -172,9 +172,9 @@ public class Flytrap {
 //		motor_l.rotate(360*rot_cycles);
 //		motor_r.rotate(360*rot_cycles);
 
-		int rot = 1050 * 3;
-		motor_l.rotate(-rot);
-		motor_r.rotate(rot);
+		int rot = 712 * 2;
+		motor_l.rotate(rot);
+		motor_r.rotate(-rot);
 		
 		motor_l.endSynchronization();
 		
@@ -183,9 +183,24 @@ public class Flytrap {
 		}
 	}
 	
-//	public static void main(String[] args) {
-//		on = true;
-//		debug_calibration();
-//	}
+	public static void mainn(String[] args) {
+		EmergencyStop.start();
+		on = true;
+		GetBall.clawMotor.resetTachoCount();
+		GetBall.liftMotor.resetTachoCount();
+		
+		int pos = 0;
+		debug_calibration();
+		while (on) {
+//			System.out.println("c" + GetBall.clawMotor.getTachoCount() + ":" +
+//					GetBall.liftMotor.getTachoCount());
+			
+			if (Button.DOWN.isDown()) on = false;
+			else if (Button.UP.isDown()) {GetBall.lift_claw(pos); pos = (pos + 1) % 4;}
+			else if (Button.LEFT.isDown()) GetBall.open_claw();
+			else if (Button.RIGHT.isDown()) GetBall.close_claw();
+			sleep(100);
+		}
+	}
 
 }

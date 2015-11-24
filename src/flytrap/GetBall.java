@@ -25,9 +25,24 @@ public class GetBall {
 	static double minAngle = 0;
 	static double distRemaining = 0;
 	static double retargetx, retargety;
-	//static NXTRegulatedMotor liftMotor = Motor.C;
-	static NXTRegulatedMotor clawMotor = Motor.C;
+	static NXTRegulatedMotor liftMotor = Motor.C;
+	static NXTRegulatedMotor clawMotor = Motor.D;
+	
+	static final int NUM_CLAW_POS = 4;
+	static final int DEGREES_PER_FULL_RANGE = 330;
+	static final int CLAW_RAISED = 0;
+	static final int CLAW_LOWERED = NUM_CLAW_POS - 1;
 
+	static void lift_claw(int pos) {
+		liftMotor.rotateTo(pos * (DEGREES_PER_FULL_RANGE/(NUM_CLAW_POS - 1)));
+	}
+	static void open_claw() {
+		clawMotor.rotateTo(0);
+	}
+	static void close_claw() {
+		clawMotor.rotateTo(-90);
+	}
+	
 	private static boolean do_turn(Behaviour behaviour, double target) {
 		int to_turn = wrap_angle((int)(target - heading));
 		// would be faster to turn in the other direction
