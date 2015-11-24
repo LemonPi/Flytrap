@@ -57,7 +57,7 @@ public class GetBall {
 	}
 
 	static void get_ball() {
-		if (target == null || target.type != GET_LAYER) return;
+		if (target == null || !(target.type == GET_LAYER || target.type == PUT_LAYER)) return;
 		Behaviour behaviour = Engine.behaviours[GET_LAYER];
 		double dx = target.x - rx;
 		double dy = target.y - ry;
@@ -76,6 +76,7 @@ public class GetBall {
 			if (do_turn(behaviour, angleLeft)) {
 				ball_status = SWIVEL_RIGHT;
 				behaviour.turn = behaviour.speed = 0;
+				minDist = 99999999;
 			}
 			break;
 		}
@@ -84,9 +85,13 @@ public class GetBall {
 				ball_status = SWIVEL_TARGET;
 				behaviour.turn = behaviour.speed = 0;
 			} else {
-				double dist = AvoidBoundary.sense_boundary();
-				if (dist < minDist) {
-					minDist = dist;
+				double dist = AvoidBoundary.sense_object();
+				double sensedDx = dist*cos(rad(heading));
+				double sensedDy = dist*sin(rad(heading));
+				// compare offset info from sensor with expected offset of ball
+				double diffFromActual = abs(sensedDx - dx) + abs(sensedDy - dy);
+				if (diffFromActual < minDist) {
+					minDist = diffFromActual;
 					minAngle = heading;
 				}
 			}
@@ -95,7 +100,7 @@ public class GetBall {
 		case SWIVEL_TARGET:{
 			if (do_turn(behaviour, minAngle)) {
 				ball_status = FORWARD_TARGET;
-				distRemaining = AvoidBoundary.sense_boundary();
+				distRemaining = AvoidBoundary.sense_object();
 				retargetx = rx;
 				retargety = ry;
 				behaviour.turn = behaviour.speed = 0;
@@ -117,7 +122,11 @@ public class GetBall {
 			break;
 		}
 		case GRAB_BALL: {
-			do_grab_ball();
+			if (target.type == PUT_LAYER) {
+				do_put_ball();
+			} else {
+				do_grab_ball();
+			}
 			ball_status = BACK_AWAY;
 			break;
 		}
@@ -142,8 +151,11 @@ public class GetBall {
 		Flytrap.rcon.out.println("- GetBall: " + ball_status + ":" + angleLeft + ":" + angleRight);
 	}
 	private static void do_grab_ball() {
-		//clawMotor.rotate(10);
-		//clawMotor.rotate(-10);
-		Sound.systemSound(false, 2);
+		lift_claw(CLAW_LOWERED);
+		close_claw();
+		lift_claw(CLAW_RAISED);
+	}
+	private static void do_put_ball() {
+		open_claw();
 	}
 }
