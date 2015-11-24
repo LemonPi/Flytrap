@@ -168,10 +168,14 @@ public class AvoidBoundary {
 		boundaries.add(boundary);
 		Flytrap.sendBoundary(x, y, r, 0);		
 	}
-	static double sense_boundary() {
-//		if (boundaries.size() > 0) return;
+	static double sense_object() {
 		distanceSensorMode.fetchSample(distanceSamples, 0);
 		double distance = distanceSamples[0]*10 - BOUNDARY_SENSOR_DEPTH; // to mm
+		return distance;
+	}
+	static double sense_boundary() {
+//		if (boundaries.size() > 0) return;
+		double distance = sense_object();
 		if (distance < BOUNDARY_SENSOR_MIN || distance > BOUNDARY_SENSOR_MAX) return distance;
 		// sensor shouldn't give readings less than 50 mm or greater than 500 mm
 		double theta = rad(heading);
