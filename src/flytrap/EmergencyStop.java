@@ -4,7 +4,7 @@ import lejos.hardware.Button;
 
 public class EmergencyStop implements Runnable {
 	public void run() {
-		while (!Button.LEFT.isDown()) {
+		while (!Button.ESCAPE.isDown()) {
 			try {
 				Thread.sleep(100);
 			} catch (Exception e) {

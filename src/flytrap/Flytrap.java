@@ -1,8 +1,6 @@
 package flytrap;
 import static flytrap.Engine.*;
 
-import java.util.*;
-
 import lejos.hardware.Button;
 import lejos.hardware.Key;
 import lejos.hardware.motor.NXTRegulatedMotor;
@@ -46,13 +44,12 @@ public class Flytrap {
 	}
 	public static void getTargets() {
 		while (true) {
-			Target cur_target = new Target();
-			cur_target.type = Integer.parseInt(rcon.waitLine());
-			cur_target.x = Integer.parseInt(rcon.waitLine());
-			cur_target.y = Integer.parseInt(rcon.waitLine());
-			cur_target.angle = Integer.parseInt(rcon.waitLine());
-			if (cur_target.x == 0 && cur_target.y == 0) break;
-			targets.add(cur_target);
+			int type = Integer.parseInt(rcon.waitLine());
+			int x = Integer.parseInt(rcon.waitLine());
+			int y = Integer.parseInt(rcon.waitLine());
+			int angle = Integer.parseInt(rcon.waitLine());
+			if (x == 0 && y == 0) break;
+			add_target(x, y, angle, type);
 		}                                                               
 		behaviours[NAV_LAYER].active = true;
 		if (!targets.isEmpty())
@@ -79,10 +76,13 @@ public class Flytrap {
 		motor_l.resetTachoCount();
 		motor_r.resetTachoCount();
 		
+//		disable_behaviour(NAV_LAYER);
 //		disable_behaviour(TURN_LAYER);
-		disable_behaviour(BOUNDARY_LAYER);
+//		disable_behaviour(BOUNDARY_LAYER);
+//		disable_behaviour(GET_LAYER);
+//		drive_mode = MANUAL;
 //		for (int i = 0; i < 300; i += 60)
-//			AvoidBoundary.add_boundary((int)rx + 600, (int)ry + i, 40);
+			AvoidBoundary.add_boundary((int)rx + 200, (int)ry + 40, 40);
 		Runnable reporter = new ReportPose();
 		
 		wait_for_keypress(Button.DOWN);
@@ -138,6 +138,8 @@ public class Flytrap {
 		}
 	}
 
+	
+	
 	public static void main(String[] args) {
 		EmergencyStop.start();
 		new Thread(new Runnable() {
@@ -155,6 +157,9 @@ public class Flytrap {
 //		debug_turn_in_place();
 //		debug_boundary_avoid();
 	}
+	
+	
+	
 	
 	// calibration without direct server report
 	public static void debug_calibration() {
@@ -190,13 +195,13 @@ public class Flytrap {
 		GetBall.liftMotor.resetTachoCount();
 		
 		int pos = 0;
-		debug_calibration();
+//		debug_calibration();
 		while (on) {
 //			System.out.println("c" + GetBall.clawMotor.getTachoCount() + ":" +
 //					GetBall.liftMotor.getTachoCount());
 			
-			if (Button.DOWN.isDown()) on = false;
-			else if (Button.UP.isDown()) {GetBall.lift_claw(pos); pos = (pos + 1) % 4;}
+			if (Button.DOWN.isDown()) {pos = (pos - 1) % 4; GetBall.lift_claw(pos);}
+			else if (Button.UP.isDown()) {pos = (pos + 1) % 4; GetBall.lift_claw(pos);}
 			else if (Button.LEFT.isDown()) GetBall.open_claw();
 			else if (Button.RIGHT.isDown()) GetBall.close_claw();
 			sleep(100);

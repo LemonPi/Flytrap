@@ -2,13 +2,10 @@ package flytrap;
 
 import java.util.*;
 
-import lejos.hardware.port.SensorPort;
-import lejos.hardware.sensor.*;
-import lejos.robotics.SampleProvider;
-
 import static java.lang.Math.*;
 
 import static flytrap.Engine.*;
+import static flytrap.Params.*;
 
 public class AvoidBoundary {
 	static final int NONE_ACTIVE = -1;
@@ -19,6 +16,7 @@ public class AvoidBoundary {
 	private static double BOUNDARY_FAR_ENOUGH = 100;
 	private static double BOUNDARY_HEADING_CLEARENCE = 100;	// degrees between target and boundary before disregarding it
 	private static double BOUNDARY_TOO_CLOSE = 300;
+	
 	/** corresponds to how wide it is */
 	private static double BOUNDARY_TOLERANCE = PI*0.5;
 	private static double BOUNDARY_FOLLOW_TOLERANCE = PI*0.04;
@@ -26,20 +24,19 @@ public class AvoidBoundary {
 	/** how hard to turn away from obstacle; adjustable */
 	private static int BOUND_TURN = 100/CYCLES_PER_SEC;
 	
-	/* sensory */
-	private static double BOUNDARY_SENSOR_MIN = 50; // 5cm
-	private static double BOUNDARY_SENSOR_MAX = 500; // 50cm
-	private static int BOUNDARY_SENSOR_DEPTH = 0;//30;  // offset of sensor that needs to be subtracted from center
+
+	private static int AVOID_NORM_RADIUS = 270;
+	
 	// radius of detected obstacle
 	private static double BOUNDARY_SENSOR_RADIUS = 40;
-	private static SampleProvider distanceSensorMode;
-	private static float[] distanceSamples;
-	static {
-		distanceSensorMode = new EV3UltrasonicSensor(SensorPort.S3).getDistanceMode();
-		distanceSamples = new float[distanceSensorMode.sampleSize()];
-	}
+	private static double BOUNDARY_TARGET_CLOSENESS_THRESHOLD = 100;	// how close to treat a detected boundary as a target
+
 
 	public static void avoid_boundary() {
+		// already avoiding a boundary by going to a target to the side of the boundary
+		if (target.type == BOUNDARY_LAYER || behaviours[TURN_LAYER].active)
+			return;
+
 		sense_boundary();
 		Behaviour bound = behaviours[BOUNDARY_LAYER];
 		// deactivate boundary avoidance when moved away far enough
@@ -83,7 +80,6 @@ public class AvoidBoundary {
 		}
 		// don't avoid boundary if you're turning in place 
 		if (behaviours[TURN_LAYER].active || 
-			targets.get(targets.size() - 1).type == TARGET_GET || 
 				behaviours[GET_LAYER].active) return;
 		
 		// take care of the case when all boundaries are inactive
@@ -118,6 +114,22 @@ public class AvoidBoundary {
 			Boundary boundary = boundaries.get(active_boundary);
 			if (boundary.threat >= EXISTENTIAL_THREAT) bound.active = true;
 
+			// go to a point to the counter clockwise of boundary since closer
+//			double xx,yy;
+//			if (boundary.theta < 0) {
+//				xx = boundary.x - (boundary.y - ry);
+//				yy =  boundary.y + boundary.x - rx;
+//			}
+//			else {
+//				xx = boundary.x + boundary.y - ry;
+//				yy = boundary.y - (boundary.x - rx);
+//			}
+//			double norm = sqrt(xx*xx + yy*yy);
+//			Flytrap.rcon.out.println("avoiding " + boundary.x + " " + boundary.y);
+//			add_target(xx / norm * AVOID_NORM_RADIUS, yy / norm * AVOID_NORM_RADIUS, ANY_HEADING, BOUNDARY_LAYER);
+//			bound.active = false;
+			
+			// hug boundary
 			bound.speed = (int) (TOP_SPEED * 0.5);
 			// want to keep boundary at +- 90 degrees to hug around it
 			// if boundary_heading_error > 0, robot is on left of boundary
@@ -182,6 +194,12 @@ public class AvoidBoundary {
 		double obsx = distance*cos(theta) + rx;
 		double obsy = distance*sin(theta) + ry;
 
+		// don't treat GET and PUT targets as boundaries always (only when not GETTING or PUTTING)
+		if (target.type == GET_LAYER || target.type == PUT_LAYER) {
+			double closeness_to_target = abs(obsx - target.x) + abs(obsy - target.y);
+			if (closeness_to_target < BOUNDARY_TARGET_CLOSENESS_THRESHOLD)
+				return distance;
+		}
 		// add boundary will take of checking if it can be merged with an existing boundary
 		add_boundary((int)obsx, (int)obsy, (int)BOUNDARY_SENSOR_RADIUS);
 		return distance;

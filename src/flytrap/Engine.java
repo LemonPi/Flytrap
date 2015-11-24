@@ -2,9 +2,8 @@ package flytrap;
 import java.util.*;
 import lejos.hardware.motor.*;
 
-import static flytrap.Engine.CYCLE_PERIOD;
-import static flytrap.Engine.target;
-import static flytrap.Engine.targets;
+import static flytrap.Params.*;
+
 import static java.lang.Math.*;
 
 public class Engine {
@@ -18,20 +17,16 @@ public class Engine {
 //	public static final double KP = 1.194;
 //	public static final double KI = 1.2;
 //	public static final double KD = 0.005;
-//	public static final int FWD = 1;
-//	public static final int BWD = -1;
-//	public static final double MM_PER_DEGREE = 134.0/360;
-//	public static final double BASE_WIDTH = 124.406;
-	public static final double MM_PER_DEGREE = 173.5/360.0; // 3470 / 20.0 / 360
-	public static final double BASE_WIDTH = 109.2263; // 109.2263
-
+	
+	public static final int AUTOMATIC = 0;
+	public static final int MANUAL = 1;
 	
 	public static final int MIN_SPEED = 120 / CYCLES_PER_SEC;
-	public static final int TOP_SPEED = 460 / CYCLES_PER_SEC;	// degrees per second
+	public static final int TOP_SPEED = 420 / CYCLES_PER_SEC;	// degrees per second
 
 	public static final int ANY_HEADING = 9000;
-	public static final double TARGET_CLOSE_ENOUGH = 40;	// in mm
-	public static final double TARGET_IMMEDIATE = 5;
+	public static final double TARGET_CLOSE_ENOUGH = 50;	// in mm
+	public static final double TARGET_IMMEDIATE = 10;
 	public static final double TARGET_CLOSE = 500;	// in mm
 	public static final double HEADING_TOLERANCE = 3;	// in angle
 	public static final double HEADING_THRESHOLD_TURN_IN_PLACE = 40;	// in angle
@@ -48,6 +43,7 @@ public class Engine {
 	
 	// internal state
 	static boolean on = false;
+	static int drive_mode = AUTOMATIC;
 	static NXTRegulatedMotor motor_l = Motor.A;
 	static NXTRegulatedMotor motor_r = Motor.B;
 
@@ -115,19 +111,27 @@ public class Engine {
 	public static boolean allowed_behaviour(int b) {
 		return ((1 << b) & allowed_behaviours) != 0;
 	}
-	public static void allow_behaviour(int b) {
+	public static void enable_behaviour(int b) {
 		allowed_behaviours |= (1 << b);
 	}
 	public static void disable_behaviour(int b) {
 		allowed_behaviours &= ~(1 << b);
 	}
 	
+	public static int add_target(double x, double y, double angle, int type) {
+		return add_target((int)x, (int)y, (int)angle, type);
+	}
 	public static int add_target(int x, int y, int angle, int type) {
 		target = new Target();
 		target.x = x;
 		target.y = y;
-		angle = wrap_angle(angle);
-		target.angle = angle;
+		if (type == GET_LAYER || type == PUT_LAYER) {
+			target.height = angle;
+		}
+		else if (angle != ANY_HEADING){
+			target.angle = wrap_angle(angle);
+		}
+
 		target.type = type;
 		targets.add(target);
 		Flytrap.sendTarget(type, x, y, angle);
@@ -162,10 +166,12 @@ public class Engine {
 	}
 	
 	public static void hard_break(int behaviour, int cycles) {
-		wait_cycles = cycles;
-		motor_l.stop(true);
-		motor_r.stop(true);
-		Flytrap.rcon.out.println("h " + behaviour + "| " + cycles);
+		if (drive_mode == AUTOMATIC) {
+			wait_cycles = cycles;
+			motor_l.stop(true);
+			motor_r.stop(true);
+			Flytrap.rcon.out.println("h " + behaviour + "| " + cycles);			
+		}
 	}
 
 	public static void odometry() {
@@ -180,8 +186,15 @@ public class Engine {
 
 		double displacement = (displacement_l + displacement_r) * 0.5;
 
-		heading += Math.toDegrees(Math.atan2(displacement_l - displacement_r, BASE_WIDTH));
-		heading = wrap_angle(heading);
+		if (platform == VENUS) {
+			gyroSensor.fetchSample(gyroSamples,  0);;
+			heading = wrap_angle(gyroSamples[0]);
+		}
+		else {
+			heading += Math.toDegrees(Math.atan2(displacement_l - displacement_r, BASE_WIDTH));
+			heading = wrap_angle(heading);
+		}
+
 		rx += displacement * cos(rad(heading));
 		ry += displacement * sin(rad(heading));
 	}
@@ -237,16 +250,20 @@ public class Engine {
 			
 	//		Flytrap.rcon.out.println("- " + out_l + " " + out_r);
 			
-			motor_l.setSpeed(CYCLES_PER_SEC * abs(out_l));
-			motor_r.setSpeed(CYCLES_PER_SEC * abs(out_r));
+			if (drive_mode == AUTOMATIC) {
+				motor_l.setSpeed(CYCLES_PER_SEC * abs(out_l));
+				motor_r.setSpeed(CYCLES_PER_SEC * abs(out_r));
+				
+				if (out_l > 0) motor_l.forward();
+				else if (out_l < 0) motor_l.backward();
+				else motor_l.stop();
+				
+				if (out_r > 0) motor_r.forward();
+				else if (out_r < 0) motor_r.backward();
+				else motor_r.stop();				
+			}
 			
-			if (out_l > 0) motor_l.forward();
-			else if (out_l < 0) motor_l.backward();
-			else motor_l.stop();
-			
-			if (out_r > 0) motor_r.forward();
-			else if (out_r < 0) motor_r.backward();
-			else motor_r.stop();		
+		
 		}
 		
 		reporter.run();

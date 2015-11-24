@@ -4,13 +4,9 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintStream;
-import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketTimeoutException;
 import java.util.*;
-
-import lejos.hardware.ev3.LocalEV3;
-import lejos.hardware.lcd.TextLCD;
 
 public class RConsole extends Thread
 {
@@ -24,9 +20,7 @@ public class RConsole extends Thread
     private Deque<String> receiveDeque = new ArrayDeque<String>();
     SynchronizedOutputStream os;
     public PrintStream out = System.out;
-    
-    private TextLCD lcd = LocalEV3.get().getTextLCD();
-    
+        
 	public RConsole()
 	{
 		super();

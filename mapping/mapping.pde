@@ -52,6 +52,7 @@ void draw() {
 
 void process_msg(String msg) {
   if (msg.charAt(0) == '-') return;  // debug message
+  if (!Character.isDigit(msg.charAt(0))) return;
   // put message onto a map with appropriate marker
   switch (msg.charAt(msg.length()-1)) {
     case 'X': {
@@ -163,8 +164,8 @@ void keyPressed() {
   else if (key == '2') {
     println("sending real targets");
     // CHANGE THESE AT GAMETIME!
-    int ball_x = 500;
-    int ball_y = 400;
+    int ball_x = 600;
+    int ball_y = 0;
     int ball_pos = 0;
     
     int hole_x = 200;

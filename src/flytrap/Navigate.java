@@ -37,7 +37,7 @@ public class Navigate {
 				behaviours[TURN_LAYER].active = true;
 				hard_break(NAV_LAYER, 3);
 				Turn.turn_size = (int)Math.abs(beta);
-				Flytrap.rcon.out.println("t " + Turn.turn_size);
+				Flytrap.rcon.out.println("t " + Turn.turn_size + " " + target.angle);
 				
 				++process_cycles;
 			}
