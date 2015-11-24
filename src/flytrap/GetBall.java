@@ -20,11 +20,11 @@ public class GetBall {
 	static final int GET_BALL_CRAWL = 20; // 2 cm
 	static final int GET_BALL_CLOSE_ENOUGH = 30; //3 cm
 	static final int GET_BALL_CRAWL_SPEED = 2; // forward speed
+	static final int GET_BALL_TOO_FAR_TOLERANCE = 10; // go back into swivel if 1cm farther than initial distance
 	static int ball_status = IDLE_STATE;
 	static double minDist = 9999;
 	static double minAngle = 0;
 	static double distRemaining = 0;
-	static double retargetx, retargety;
 	static NXTRegulatedMotor liftMotor = Motor.C;
 	static NXTRegulatedMotor clawMotor = Motor.D;
 	
@@ -101,21 +101,20 @@ public class GetBall {
 			if (do_turn(behaviour, minAngle)) {
 				ball_status = FORWARD_TARGET;
 				distRemaining = AvoidBoundary.sense_object();
-				retargetx = rx;
-				retargety = ry;
 				behaviour.turn = behaviour.speed = 0;
 			}
 			break;
 		}
 		case FORWARD_TARGET:{
-			double newdx = retargetx - rx;
-			double newdy = retargety - ry;
-			double curDist = newdx*newdx + newdy*newdy;
-			Flytrap.rcon.out.println("- in forward target - curDist " + curDist + "distRemaining " + distRemaining + " minAngle " + minAngle);
-			if (curDist >= sq(distRemaining - GET_BALL_CLOSE_ENOUGH)) {
+			double dist = AvoidBoundary.sense_object();
+			Flytrap.rcon.out.println("- in forward target - dist " + dist + " original " + distRemaining + " minAngle " + minAngle);
+			if (dist < GET_BALL_CLOSE_ENOUGH) {
 				ball_status = GRAB_BALL;
 				behaviour.turn = behaviour.speed = 0;
-			} else {
+			} else if (dist > distRemaining - GET_BALL_TOO_FAR_TOLERANCE){
+				ball_status = SWIVEL_LEFT;
+				behaviour.turn = behaviour.speed = 0;
+			} else{
 				behaviour.speed = GET_BALL_CRAWL_SPEED;
 				behaviour.turn = 0;
 			}
