@@ -38,7 +38,7 @@ public class Flytrap {
 	public static void getPose() {
 		rx = (double)Integer.parseInt(rcon.waitLine());
 		ry = (double)Integer.parseInt(rcon.waitLine());
-		heading = (double)Integer.parseInt(rcon.waitLine());
+		init_heading = heading = (double)Integer.parseInt(rcon.waitLine());
 		
 		sendPoint(9, (int)rx, (int)ry);	// acknowledge
 	}
@@ -68,11 +68,18 @@ public class Flytrap {
 	
 	// usable modules to be put into main
 	public static void gameplay() {
-		getPose();
-		while (targets.isEmpty())
-			getTargets();
+//		getPose();
+//		while (targets.isEmpty())
+//			getTargets();
+		rx = 2591;
+		ry = 2743;
+		init_heading = heading = 180;
+		sendPoint(9, (int)rx, (int)ry);
+		
+		add_target(2743,1524, ANY_HEADING, PUT_LAYER);
+		add_target(610,2134, ANY_HEADING, GET_LAYER);
 		for (Target targ: targets) sendTarget(targ.type, targ.x, targ.y, targ.angle);
-
+		
 		motor_l.resetTachoCount();
 		motor_r.resetTachoCount();
 		
@@ -81,11 +88,15 @@ public class Flytrap {
 //		disable_behaviour(BOUNDARY_LAYER);
 //		disable_behaviour(GET_LAYER);
 //		drive_mode = MANUAL;
-//		for (int i = 0; i < 300; i += 60)
-			AvoidBoundary.add_boundary((int)rx + 200, (int)ry + 40, 40);
+//		for (int i = 0; i < 6; i += 1) {
+			// add in some random boundaries
+//			AvoidBoundary.add_boundary((int)rx + 200, (int)ry + 40, 40);
+//		}
+		
 		Runnable reporter = new ReportPose();
 		
 		wait_for_keypress(Button.DOWN);
+//		Params.gyroSense.reset();
 		
 		while (on) {
 			go(reporter);
@@ -134,7 +145,7 @@ public class Flytrap {
 	public static void debug_boundary_avoid() {
 		while (on) {
 			rcon.out.println(AvoidBoundary.sense_boundary());
-			sleep(50);
+			sleep(200);
 		}
 	}
 

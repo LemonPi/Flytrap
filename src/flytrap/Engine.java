@@ -22,7 +22,7 @@ public class Engine {
 	public static final int MANUAL = 1;
 	
 	public static final int MIN_SPEED = 120 / CYCLES_PER_SEC;
-	public static final int TOP_SPEED = 420 / CYCLES_PER_SEC;	// degrees per second
+	public static final int TOP_SPEED = 380 / CYCLES_PER_SEC;	// degrees per second
 
 	public static final int ANY_HEADING = 9000;
 	public static final double TARGET_CLOSE_ENOUGH = 50;	// in mm
@@ -69,7 +69,7 @@ public class Engine {
 	static int active_behaviour = WAIT_LAYER;	// initially no available layer
 	static int allowed_behaviours = ~0;	// bit field with 0 being allowed and 1 being disabled
 
-	static double rx,ry,heading;	// heading is in degrees [-180,180]
+	static double rx,ry,heading,init_heading;	// heading is in degrees [-180,180]
 
 	static List<Target> targets = new ArrayList<Target>();
 	static Target target = null;
@@ -188,7 +188,7 @@ public class Engine {
 
 		if (platform == VENUS) {
 			gyroSensor.fetchSample(gyroSamples,  0);;
-			heading = wrap_angle(gyroSamples[0]);
+			heading = -wrap_angle(gyroSamples[0] + init_heading);
 		}
 		else {
 			heading += Math.toDegrees(Math.atan2(displacement_l - displacement_r, BASE_WIDTH));

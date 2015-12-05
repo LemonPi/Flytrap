@@ -13,12 +13,12 @@ public class GetBall {
 	static final int FORWARD_TARGET = 4;
 	static final int GRAB_BALL = 5;
 	static final int BACK_AWAY = 6;
-	static final int GET_BALL_BOUND = 100; // 10 cm
+	static final int GET_BALL_BOUND = 300; 
 	static final int GET_BALL_SWIVEL = 30; // degrees left, right
 	static final int GET_BALL_CRAWL = 20; // 2 cm
-	static final int GET_BALL_CLOSE_ENOUGH = 60; //3 cm
+	static final int GET_BALL_CLOSE_ENOUGH = 95; //3 cm
 	static final int GET_BALL_CRAWL_SPEED = 4; // forward speed
-	static final int GET_BALL_TOO_FAR_TOLERANCE = 30; // go back into swivel if 1cm farther than initial distance
+	static final int GET_BALL_TOO_FAR_TOLERANCE = 50; // go back into swivel than initial distance
 	static int ball_status = IDLE_STATE;
 	static double minDist = 9999;
 	static double minAngle = 0;
@@ -33,16 +33,20 @@ public class GetBall {
 	static final int CLAW_RAISED = 0;
 	static final int CLAW_LOWERED = NUM_CLAW_POS - 1;
 
+	static int get_ball_swivel = GET_BALL_SWIVEL;
+	
 	static void lift_claw(int pos) {
 		Flytrap.rcon.out.println("lift claw to " + pos);
-		if (platform == VENUS)
+		if (platform == VENUS) {
+			liftMotor.setSpeed(50);
 			liftMotor.rotateTo(pos * (DEGREES_PER_FULL_RANGE/(NUM_CLAW_POS - 1)));
+		}
 	}
 	static void open_claw() {
 		clawMotor.rotateTo(0);
 	}
 	static void close_claw() {
-		clawMotor.rotateTo(-90);
+		clawMotor.rotateTo(-100);
 	}
 	
 	private static boolean do_turn(Behaviour behaviour, double target) {
@@ -57,8 +61,48 @@ public class GetBall {
 		behaviour.turn = to_turn > 0? GET_BALL_CRAWL_SPEED: -GET_BALL_CRAWL_SPEED;
 		return false;
 	}
-
+	
 	static void get_ball() {
+		Behaviour behaviour = Engine.behaviours[GET_LAYER];
+		if (target == null || !(target.type == GET_LAYER || target.type == PUT_LAYER)) {
+			behaviour.active = false;
+			return;
+		}
+		if (target.type == PUT_LAYER) {
+			get_ball_nope();
+			return;
+		}
+		double dx = target.x - rx;
+		double dy = target.y - ry;
+		if (ball_status == BACK_AWAY){
+			//backing away
+			if (dx*dx + dy*dy > sq(GET_BALL_BOUND)) {
+				behaviour.active = false;
+				ball_status = IDLE_STATE;
+				behaviour.speed = behaviour.turn = 0;
+				waypoint(GET_LAYER);
+			} else {
+				behaviour.active = true;
+				behaviour.speed = -GET_BALL_CRAWL_SPEED;
+				behaviour.turn = 0;
+			}
+			return;
+		}
+		if (dx*dx + dy*dy > sq(GET_BALL_CLOSE_ENOUGH)) {
+			behaviour.active = false;
+			return;
+		} else {
+			hard_break(GET_LAYER, 5);
+			if (target.type == GET_LAYER) {
+				do_grab_ball();
+			} else {
+				do_put_ball();
+			}
+			ball_status = BACK_AWAY;
+		}
+		
+	}
+	static void get_ball_nope() {
 
 		Behaviour behaviour = Engine.behaviours[GET_LAYER];
 		if (target == null || !(target.type == GET_LAYER || target.type == PUT_LAYER)) {
@@ -90,8 +134,21 @@ public class GetBall {
 		}
 		case SWIVEL_RIGHT: {
 			if (do_turn(behaviour, angleRight)) {
-				ball_status = SWIVEL_TARGET;
-				behaviour.turn = behaviour.speed = 0;
+				if (minDist > GET_BALL_BOUND + GET_BALL_TOO_FAR_TOLERANCE) { // didn't find it in this swivel, swivel larger
+					ball_status = SWIVEL_LEFT;
+					get_ball_swivel += 5;
+				}
+				else {
+					get_ball_swivel = GET_BALL_SWIVEL;
+					ball_status = SWIVEL_TARGET;
+					behaviour.turn = behaviour.speed = 0;					
+				}
+//				if (minDist < CLOSE_ENOUGH_TO_TARGET) {
+//					ball_status = FORWARD_TARGET;
+//					distRemaining = dist;
+//					++process_cycles;
+//					Flytrap.rcon.out.println("distRemaining " + dist);
+//				}
 			} else {
 				double dist = AvoidBoundary.sense_object();
 				double sensedDx = dist*cos(rad(heading));
@@ -103,14 +160,9 @@ public class GetBall {
 				if (diffFromActual < minDist) {
 					minDist = diffFromActual;
 					minAngle = heading;
-					if (minDist < CLOSE_ENOUGH_TO_TARGET) {
-						ball_status = FORWARD_TARGET;
-						distRemaining = dist;
-						++process_cycles;
-						Flytrap.rcon.out.println("distRemaining " + dist);
-					}
 				}
 			}
+
 			break;
 		}
 		case SWIVEL_TARGET:{

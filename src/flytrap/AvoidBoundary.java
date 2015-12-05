@@ -29,7 +29,7 @@ public class AvoidBoundary {
 	
 	// radius of detected obstacle
 	private static double BOUNDARY_SENSOR_RADIUS = 40;
-	private static double BOUNDARY_TARGET_CLOSENESS_THRESHOLD = 100;	// how close to treat a detected boundary as a target
+	private static double BOUNDARY_TARGET_CLOSENESS_THRESHOLD = 300;	// how close to treat a detected boundary as a target
 
 
 	public static void avoid_boundary() {
@@ -182,7 +182,7 @@ public class AvoidBoundary {
 	}
 	static double sense_object() {
 		distanceSensorMode.fetchSample(distanceSamples, 0);
-		double distance = distanceSamples[0]*10 - BOUNDARY_SENSOR_DEPTH; // to mm
+		double distance = distanceSamples[0]*DISTANCE_SENSOR_SCALE + BOUNDARY_SENSOR_DEPTH; // to mm
 		return distance;
 	}
 	static double sense_boundary() {
@@ -195,7 +195,7 @@ public class AvoidBoundary {
 		double obsy = distance*sin(theta) + ry;
 
 		// don't treat GET and PUT targets as boundaries always (only when not GETTING or PUTTING)
-		if (target.type == GET_LAYER || target.type == PUT_LAYER) {
+		if (target != null && (target.type == GET_LAYER || target.type == PUT_LAYER)) {
 			double closeness_to_target = abs(obsx - target.x) + abs(obsy - target.y);
 			if (closeness_to_target < BOUNDARY_TARGET_CLOSENESS_THRESHOLD)
 				return distance;

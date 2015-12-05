@@ -1,8 +1,8 @@
 import processing.net.*;
 import java.util.ArrayDeque;
-double PIXEL_PER_MM = 1;
-int offset_x = -600;
-int offset_y = 800;
+double PIXEL_PER_MM = 0.4;
+int offset_x = 0;
+int offset_y = 0;
 double BOUNDARY_SIZE_SCALE = 2*PIXEL_PER_MM;
 int GRID_WIDTH = 200;
 
@@ -31,8 +31,8 @@ void setup() {
 }
 
 void give_pose() {
-    brain.write("0\n");
-    brain.write("0\n");
+    brain.write("2134\n");
+    brain.write("1524\n");
     brain.write("0\n");
     println("gave pose");
 }
@@ -164,12 +164,12 @@ void keyPressed() {
   else if (key == '2') {
     println("sending real targets");
     // CHANGE THESE AT GAMETIME!
-    int ball_x = 600;
-    int ball_y = 0;
+    int ball_y = 457;
+    int ball_x = 3048;
     int ball_pos = 0;
     
-    int hole_x = 200;
-    int hole_y = -200;
+    int hole_y = 2591;
+    int hole_x = 2743;
     int hole_pos = 3;
     
     brain.write("2\n"+hole_x+"\n"+hole_y+"\n"+hole_pos+"\n");
